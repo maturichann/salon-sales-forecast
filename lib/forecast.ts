@@ -1,5 +1,5 @@
 import { Staff, SalesStandard, HelpRecord, StaffLeave } from '@/types/database'
-import { getSeasonType } from './constants'
+import { getSeasonType, roundToThousand } from './constants'
 
 export interface StaffForecast {
   staffId: string
@@ -105,9 +105,9 @@ export function calculateForecast(
       for (const help of staffHelps) {
         totalDeductionPercent += help.deduction_percent
 
-        // ヘルプ先への加算を集計
-        const additionTreatment = Math.round(baseTreatment * (help.addition_percent / 100))
-        const additionRetail = Math.round(baseRetail * (help.addition_percent / 100))
+        // ヘルプ先への加算を集計（千の位で四捨五入）
+        const additionTreatment = roundToThousand(baseTreatment * (help.addition_percent / 100))
+        const additionRetail = roundToThousand(baseRetail * (help.addition_percent / 100))
         const additionTotal = additionTreatment + additionRetail
 
         const existing = helpAdditionsMap.get(help.to_store_id) || { total: 0, treatment: 0, retail: 0 }
@@ -118,10 +118,10 @@ export function calculateForecast(
         })
       }
 
-      // 減算後の売上
+      // 減算後の売上（千の位で四捨五入）
       const deductionRatio = 1 - totalDeductionPercent / 100
-      const adjustedTreatment = Math.round(baseTreatment * deductionRatio)
-      const adjustedRetail = Math.round(baseRetail * deductionRatio)
+      const adjustedTreatment = roundToThousand(baseTreatment * deductionRatio)
+      const adjustedRetail = roundToThousand(baseRetail * deductionRatio)
       const adjustedTotal = adjustedTreatment + adjustedRetail
 
       staffForecasts.push({
