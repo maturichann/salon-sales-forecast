@@ -66,16 +66,24 @@ export default function StaffPage() {
     setStaffLeaves(data || [])
   }
 
-  async function toggleLeave(staffId: string) {
+  async function updateWorkRatio(staffId: string, workRatio: number) {
     const existingLeave = staffLeaves.find((l) => l.staff_id === staffId)
 
-    if (existingLeave) {
-      await supabase.from('staff_leaves').delete().eq('id', existingLeave.id)
+    if (workRatio === 1) {
+      // 100%稼働の場合はレコードを削除
+      if (existingLeave) {
+        await supabase.from('staff_leaves').delete().eq('id', existingLeave.id)
+      }
+    } else if (existingLeave) {
+      // 既存レコードを更新
+      await supabase.from('staff_leaves').update({ work_ratio: workRatio }).eq('id', existingLeave.id)
     } else {
+      // 新規レコードを追加
       await supabase.from('staff_leaves').insert({
         staff_id: staffId,
         year: selectedYear,
         month: selectedMonth,
+        work_ratio: workRatio,
       })
     }
 
@@ -254,7 +262,7 @@ export default function StaffPage() {
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">職種</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">ランク</th>
               <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">
-                {selectedMonth}月の状態
+                {selectedMonth}月稼働率
               </th>
               <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">操作</th>
             </tr>
@@ -268,9 +276,10 @@ export default function StaffPage() {
               </tr>
             ) : (
               filteredStaff.map((s) => {
-                const isOnLeave = staffLeaves.some((l) => l.staff_id === s.id)
+                const leaveRecord = staffLeaves.find((l) => l.staff_id === s.id)
+                const workRatio = leaveRecord ? leaveRecord.work_ratio : 1
                 return (
-                  <tr key={s.id} className={`hover:bg-gray-50 ${isOnLeave ? 'bg-gray-100' : ''}`}>
+                  <tr key={s.id} className={`hover:bg-gray-50 ${workRatio < 1 ? 'bg-gray-100' : ''}`}>
                     <td className="px-4 py-3">{s.name}</td>
                     <td className="px-4 py-3">{s.stores.name}</td>
                     <td className="px-4 py-3">
@@ -290,16 +299,23 @@ export default function StaffPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <button
-                        onClick={() => toggleLeave(s.id)}
-                        className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                          isOnLeave
-                            ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                            : 'bg-green-100 text-green-700 hover:bg-green-200'
+                      <select
+                        value={workRatio}
+                        onChange={(e) => updateWorkRatio(s.id, Number(e.target.value))}
+                        className={`px-2 py-1 border rounded text-sm ${
+                          workRatio === 0
+                            ? 'bg-red-100 text-red-700 border-red-300'
+                            : workRatio < 1
+                            ? 'bg-yellow-100 text-yellow-700 border-yellow-300'
+                            : 'bg-green-100 text-green-700 border-green-300'
                         }`}
                       >
-                        {isOnLeave ? '休職中' : '出勤'}
-                      </button>
+                        <option value={1}>100%</option>
+                        <option value={0.75}>75%</option>
+                        <option value={0.5}>50%</option>
+                        <option value={0.25}>25%</option>
+                        <option value={0}>休職</option>
+                      </select>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button

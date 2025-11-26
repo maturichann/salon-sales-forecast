@@ -189,5 +189,6 @@ export interface StaffLeave {
   staff_id: string
   year: number
   month: number
+  work_ratio: number
   created_at: string
 }

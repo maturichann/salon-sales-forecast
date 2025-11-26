@@ -54,8 +54,11 @@ export function calculateForecast(
   const seasonType = getSeasonType(month)
   const results: StoreForecast[] = []
 
-  // 休職中のスタッフIDセット
-  const leaveStaffIds = new Set(staffLeaves.map(l => l.staff_id))
+  // スタッフの稼働率マップ（未登録は100%稼働）
+  const staffWorkRatioMap = new Map<string, number>()
+  for (const leave of staffLeaves) {
+    staffWorkRatioMap.set(leave.staff_id, leave.work_ratio)
+  }
 
   // 各店舗のヘルプ受入分を集計するためのマップ
   const helpAdditionsMap: Map<string, { total: number; treatment: number; retail: number }> = new Map()
@@ -68,7 +71,8 @@ export function calculateForecast(
     let storeTotalRetail = 0
 
     for (const staff of storeStaff) {
-      const isOnLeave = leaveStaffIds.has(staff.id)
+      // 稼働率を取得（未登録は100%稼働）
+      const workRatio = staffWorkRatioMap.has(staff.id) ? staffWorkRatioMap.get(staff.id)! : 1
 
       // 基準売上を取得（出勤日数に関係なく固定）
       const standard = salesStandards.find(
@@ -77,8 +81,8 @@ export function calculateForecast(
 
       if (!standard) continue
 
-      // 休職中の場合は売上0
-      if (isOnLeave) {
+      // 完全休職（稼働率0）の場合は売上0
+      if (workRatio === 0) {
         staffForecasts.push({
           staffId: staff.id,
           staffName: staff.name,
@@ -93,10 +97,10 @@ export function calculateForecast(
         continue
       }
 
-      // 基準売上（固定金額）
-      const baseTreatment = standard.treatment
+      // 基準売上（固定金額）× 稼働率
+      const baseTreatment = Math.round(standard.treatment * workRatio)
       // 福袋実施年は物販2倍
-      const baseRetail = isFukubukuroYear ? standard.retail * 2 : standard.retail
+      const baseRetail = Math.round((isFukubukuroYear ? standard.retail * 2 : standard.retail) * workRatio)
       const baseTotal = baseTreatment + baseRetail
 
       // ヘルプによる減算を計算
