@@ -1,4 +1,4 @@
-import { Staff, SalesStandard, MonthlyAttendance, HelpRecord } from '@/types/database'
+import { Staff, SalesStandard, HelpRecord } from '@/types/database'
 import { getSeasonType } from './constants'
 
 export interface StaffForecast {
@@ -6,7 +6,6 @@ export interface StaffForecast {
   staffName: string
   jobType: string
   rank: string
-  workingDays: number
   baseSales: {
     total: number
     treatment: number
@@ -42,13 +41,10 @@ export interface StoreForecast {
   }
 }
 
-const STANDARD_WORKING_DAYS = 22
-
 export function calculateForecast(
   stores: { id: string; name: string }[],
   allStaff: Staff[],
   salesStandards: SalesStandard[],
-  attendance: MonthlyAttendance[],
   helpRecords: HelpRecord[],
   month: number
 ): StoreForecast[] {
@@ -66,20 +62,16 @@ export function calculateForecast(
     let storeTotalRetail = 0
 
     for (const staff of storeStaff) {
-      const att = attendance.find((a) => a.staff_id === staff.id)
-      const workingDays = att?.working_days || 0
-
-      // 基準売上を取得
+      // 基準売上を取得（出勤日数に関係なく固定）
       const standard = salesStandards.find(
         (s) => s.job_type === staff.job_type && s.rank === staff.rank && s.season_type === seasonType
       )
 
       if (!standard) continue
 
-      // 出勤日数に応じた売上計算
-      const ratio = workingDays / STANDARD_WORKING_DAYS
-      const baseTreatment = Math.round(standard.treatment * ratio)
-      const baseRetail = Math.round(standard.retail * ratio)
+      // 基準売上（固定金額）
+      const baseTreatment = standard.treatment
+      const baseRetail = standard.retail
       const baseTotal = baseTreatment + baseRetail
 
       // ヘルプによる減算を計算
@@ -112,7 +104,6 @@ export function calculateForecast(
         staffName: staff.name,
         jobType: staff.job_type,
         rank: staff.rank,
-        workingDays,
         baseSales: {
           total: baseTotal,
           treatment: baseTreatment,

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Store, Staff, SalesStandard, MonthlyAttendance, HelpRecord } from '@/types/database'
+import { Store, Staff, SalesStandard, HelpRecord } from '@/types/database'
 import { calculateForecast, StoreForecast } from '@/lib/forecast'
 import { formatCurrency, getSeasonLabel, JOB_TYPES } from '@/lib/constants'
 
@@ -10,7 +10,6 @@ export default function HomePage() {
   const [stores, setStores] = useState<Store[]>([])
   const [staff, setStaff] = useState<Staff[]>([])
   const [salesStandards, setSalesStandards] = useState<SalesStandard[]>([])
-  const [attendance, setAttendance] = useState<MonthlyAttendance[]>([])
   const [helpRecords, setHelpRecords] = useState<HelpRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [forecasts, setForecasts] = useState<StoreForecast[]>([])
@@ -35,13 +34,12 @@ export default function HomePage() {
         stores,
         staff,
         salesStandards,
-        attendance,
         helpRecords,
         selectedMonth
       )
       setForecasts(results)
     }
-  }, [stores, staff, salesStandards, attendance, helpRecords, selectedMonth])
+  }, [stores, staff, salesStandards, helpRecords, selectedMonth])
 
   async function fetchMasterData() {
     const [storesRes, staffRes, standardsRes] = await Promise.all([
@@ -57,21 +55,13 @@ export default function HomePage() {
   }
 
   async function fetchMonthlyData() {
-    const [attendanceRes, helpRes] = await Promise.all([
-      supabase
-        .from('monthly_attendance')
-        .select('*')
-        .eq('year', selectedYear)
-        .eq('month', selectedMonth),
-      supabase
-        .from('help_records')
-        .select('*')
-        .eq('year', selectedYear)
-        .eq('month', selectedMonth),
-    ])
+    const { data } = await supabase
+      .from('help_records')
+      .select('*')
+      .eq('year', selectedYear)
+      .eq('month', selectedMonth)
 
-    setAttendance(attendanceRes.data || [])
-    setHelpRecords(helpRes.data || [])
+    setHelpRecords(data || [])
   }
 
   async function saveForecast() {
@@ -234,9 +224,6 @@ export default function HomePage() {
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">
                         職種/ランク
                       </th>
-                      <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">
-                        出勤日数
-                      </th>
                       <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">
                         施術
                       </th>
@@ -269,7 +256,6 @@ export default function HomePage() {
                             {sf.rank}
                           </span>
                         </td>
-                        <td className="px-4 py-2 text-center">{sf.workingDays}日</td>
                         <td className="px-4 py-2 text-right">
                           {formatCurrency(sf.adjustedSales.treatment)}
                         </td>
@@ -288,7 +274,7 @@ export default function HomePage() {
                     ))}
                     {forecast.staffForecasts.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="px-4 py-4 text-center text-gray-500 text-sm">
+                        <td colSpan={6} className="px-4 py-4 text-center text-gray-500 text-sm">
                           スタッフが登録されていません
                         </td>
                       </tr>
