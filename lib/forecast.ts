@@ -1,4 +1,4 @@
-import { Staff, SalesStandard, HelpRecord } from '@/types/database'
+import { Staff, SalesStandard, HelpRecord, StaffLeave } from '@/types/database'
 import { getSeasonType } from './constants'
 
 export interface StaffForecast {
@@ -18,6 +18,7 @@ export interface StaffForecast {
   }
   helpDeductions: number
   helpAdditions: number
+  isOnLeave: boolean
 }
 
 export interface StoreForecast {
@@ -46,10 +47,14 @@ export function calculateForecast(
   allStaff: Staff[],
   salesStandards: SalesStandard[],
   helpRecords: HelpRecord[],
+  staffLeaves: StaffLeave[],
   month: number
 ): StoreForecast[] {
   const seasonType = getSeasonType(month)
   const results: StoreForecast[] = []
+
+  // 休職中のスタッフIDセット
+  const leaveStaffIds = new Set(staffLeaves.map(l => l.staff_id))
 
   // 各店舗のヘルプ受入分を集計するためのマップ
   const helpAdditionsMap: Map<string, { total: number; treatment: number; retail: number }> = new Map()
@@ -62,12 +67,30 @@ export function calculateForecast(
     let storeTotalRetail = 0
 
     for (const staff of storeStaff) {
+      const isOnLeave = leaveStaffIds.has(staff.id)
+
       // 基準売上を取得（出勤日数に関係なく固定）
       const standard = salesStandards.find(
         (s) => s.job_type === staff.job_type && s.rank === staff.rank && s.season_type === seasonType
       )
 
       if (!standard) continue
+
+      // 休職中の場合は売上0
+      if (isOnLeave) {
+        staffForecasts.push({
+          staffId: staff.id,
+          staffName: staff.name,
+          jobType: staff.job_type,
+          rank: staff.rank,
+          baseSales: { total: 0, treatment: 0, retail: 0 },
+          adjustedSales: { total: 0, treatment: 0, retail: 0 },
+          helpDeductions: 0,
+          helpAdditions: 0,
+          isOnLeave: true,
+        })
+        continue
+      }
 
       // 基準売上（固定金額）
       const baseTreatment = standard.treatment
@@ -116,6 +139,7 @@ export function calculateForecast(
         },
         helpDeductions: totalDeductionPercent,
         helpAdditions: 0,
+        isOnLeave: false,
       })
 
       storeTotalTreatment += adjustedTreatment

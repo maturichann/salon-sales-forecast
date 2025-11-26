@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Store, Staff, HelpRecord } from '@/types/database'
+import { Store, Staff, HelpRecord, StaffLeave } from '@/types/database'
 import { JOB_TYPES, getSeasonLabel } from '@/lib/constants'
 
 type StaffWithStore = Staff & { stores: { name: string } }
@@ -11,6 +11,7 @@ export default function HelpPage() {
   const [stores, setStores] = useState<Store[]>([])
   const [staff, setStaff] = useState<StaffWithStore[]>([])
   const [helpRecords, setHelpRecords] = useState<HelpRecord[]>([])
+  const [staffLeaves, setStaffLeaves] = useState<StaffLeave[]>([])
   const [loading, setLoading] = useState(true)
 
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
@@ -33,6 +34,7 @@ export default function HelpPage() {
   useEffect(() => {
     if (selectedStore && staff.length > 0) {
       fetchHelpData()
+      fetchLeaveData()
     }
   }, [selectedYear, selectedMonth, selectedStore, staff])
 
@@ -72,6 +74,41 @@ export default function HelpPage() {
       .in('staff_id', staffIds)
 
     setHelpRecords(data || [])
+  }
+
+  async function fetchLeaveData() {
+    const storeStaff = staff.filter((s) => s.store_id === selectedStore)
+    const staffIds = storeStaff.map((s) => s.id)
+
+    if (staffIds.length === 0) {
+      setStaffLeaves([])
+      return
+    }
+
+    const { data } = await supabase
+      .from('staff_leaves')
+      .select('*')
+      .eq('year', selectedYear)
+      .eq('month', selectedMonth)
+      .in('staff_id', staffIds)
+
+    setStaffLeaves(data || [])
+  }
+
+  async function toggleLeave(staffId: string) {
+    const existingLeave = staffLeaves.find((l) => l.staff_id === staffId)
+
+    if (existingLeave) {
+      await supabase.from('staff_leaves').delete().eq('id', existingLeave.id)
+    } else {
+      await supabase.from('staff_leaves').insert({
+        staff_id: staffId,
+        year: selectedYear,
+        month: selectedMonth,
+      })
+    }
+
+    fetchLeaveData()
   }
 
   function openHelpModal(staffId?: string, helpRecord?: HelpRecord) {
@@ -195,22 +232,24 @@ export default function HelpPage() {
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">スタッフ</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">職種</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">ランク</th>
+              <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">休職</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">ヘルプ先</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {storeStaff.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
                   この店舗にスタッフが登録されていません
                 </td>
               </tr>
             ) : (
               storeStaff.map((s) => {
                 const helps = helpRecords.filter((h) => h.staff_id === s.id)
+                const isOnLeave = staffLeaves.some((l) => l.staff_id === s.id)
 
                 return (
-                  <tr key={s.id} className="hover:bg-gray-50">
+                  <tr key={s.id} className={`hover:bg-gray-50 ${isOnLeave ? 'bg-gray-100 opacity-60' : ''}`}>
                     <td className="px-4 py-3 font-medium">{s.name}</td>
                     <td className="px-4 py-3">
                       <span
@@ -227,6 +266,18 @@ export default function HelpPage() {
                       <span className="px-2 py-1 bg-gray-100 rounded text-xs font-medium">
                         {s.rank}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        onClick={() => toggleLeave(s.id)}
+                        className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                          isOnLeave
+                            ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {isOnLeave ? '休職中' : '出勤'}
+                      </button>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-col gap-1">

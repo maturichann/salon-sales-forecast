@@ -183,3 +183,11 @@ export type SalesStandard = Database['public']['Tables']['sales_standards']['Row
 export type MonthlyAttendance = Database['public']['Tables']['monthly_attendance']['Row']
 export type HelpRecord = Database['public']['Tables']['help_records']['Row']
 export type ForecastHistory = Database['public']['Tables']['forecast_history']['Row']
+
+export interface StaffLeave {
+  id: string
+  staff_id: string
+  year: number
+  month: number
+  created_at: string
+}

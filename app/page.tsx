@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Store, Staff, SalesStandard, HelpRecord } from '@/types/database'
+import { Store, Staff, SalesStandard, HelpRecord, StaffLeave } from '@/types/database'
 import { calculateForecast, StoreForecast } from '@/lib/forecast'
 import { formatCurrency, getSeasonLabel, JOB_TYPES } from '@/lib/constants'
 
@@ -11,6 +11,7 @@ export default function HomePage() {
   const [staff, setStaff] = useState<Staff[]>([])
   const [salesStandards, setSalesStandards] = useState<SalesStandard[]>([])
   const [helpRecords, setHelpRecords] = useState<HelpRecord[]>([])
+  const [staffLeaves, setStaffLeaves] = useState<StaffLeave[]>([])
   const [loading, setLoading] = useState(true)
   const [forecasts, setForecasts] = useState<StoreForecast[]>([])
 
@@ -35,11 +36,12 @@ export default function HomePage() {
         staff,
         salesStandards,
         helpRecords,
+        staffLeaves,
         selectedMonth
       )
       setForecasts(results)
     }
-  }, [stores, staff, salesStandards, helpRecords, selectedMonth])
+  }, [stores, staff, salesStandards, helpRecords, staffLeaves, selectedMonth])
 
   async function fetchMasterData() {
     const [storesRes, staffRes, standardsRes] = await Promise.all([
@@ -55,13 +57,21 @@ export default function HomePage() {
   }
 
   async function fetchMonthlyData() {
-    const { data } = await supabase
-      .from('help_records')
-      .select('*')
-      .eq('year', selectedYear)
-      .eq('month', selectedMonth)
+    const [helpRes, leavesRes] = await Promise.all([
+      supabase
+        .from('help_records')
+        .select('*')
+        .eq('year', selectedYear)
+        .eq('month', selectedMonth),
+      supabase
+        .from('staff_leaves')
+        .select('*')
+        .eq('year', selectedYear)
+        .eq('month', selectedMonth),
+    ])
 
-    setHelpRecords(data || [])
+    setHelpRecords(helpRes.data || [])
+    setStaffLeaves(leavesRes.data || [])
   }
 
   async function saveForecast() {
