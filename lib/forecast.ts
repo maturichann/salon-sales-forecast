@@ -93,10 +93,10 @@ export function calculateForecast(
         continue
       }
 
-      // 基準売上（固定金額）
-      const baseTreatment = standard.treatment
+      // 基準売上（固定金額、千の位で四捨五入）
+      const baseTreatment = roundToThousand(standard.treatment)
       // 福袋実施年は物販2倍
-      const baseRetail = isFukubukuroYear ? standard.retail * 2 : standard.retail
+      const baseRetail = roundToThousand(isFukubukuroYear ? standard.retail * 2 : standard.retail)
       const baseTotal = baseTreatment + baseRetail
 
       // ヘルプによる減算を計算
