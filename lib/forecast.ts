@@ -93,10 +93,10 @@ export function calculateForecast(
         continue
       }
 
-      // 基準売上（固定金額、千の位で四捨五入）
-      const baseTreatment = roundToThousand(standard.treatment)
+      // 基準売上（固定金額）
+      const baseTreatment = standard.treatment
       // 福袋実施年は物販2倍
-      const baseRetail = roundToThousand(isFukubukuroYear ? standard.retail * 2 : standard.retail)
+      const baseRetail = isFukubukuroYear ? standard.retail * 2 : standard.retail
       const baseTotal = baseTreatment + baseRetail
 
       // ヘルプによる減算を計算
@@ -105,9 +105,9 @@ export function calculateForecast(
       for (const help of staffHelps) {
         totalDeductionPercent += help.deduction_percent
 
-        // ヘルプ先への加算を集計（千の位で四捨五入）
-        const additionTreatment = roundToThousand(baseTreatment * (help.addition_percent / 100))
-        const additionRetail = roundToThousand(baseRetail * (help.addition_percent / 100))
+        // ヘルプ先への加算を集計
+        const additionTreatment = Math.round(baseTreatment * (help.addition_percent / 100))
+        const additionRetail = Math.round(baseRetail * (help.addition_percent / 100))
         const additionTotal = additionTreatment + additionRetail
 
         const existing = helpAdditionsMap.get(help.to_store_id) || { total: 0, treatment: 0, retail: 0 }
@@ -118,10 +118,10 @@ export function calculateForecast(
         })
       }
 
-      // 減算後の売上（千の位で四捨五入）
+      // 減算後の売上
       const deductionRatio = 1 - totalDeductionPercent / 100
-      const adjustedTreatment = roundToThousand(baseTreatment * deductionRatio)
-      const adjustedRetail = roundToThousand(baseRetail * deductionRatio)
+      const adjustedTreatment = Math.round(baseTreatment * deductionRatio)
+      const adjustedRetail = Math.round(baseRetail * deductionRatio)
       const adjustedTotal = adjustedTreatment + adjustedRetail
 
       staffForecasts.push({
