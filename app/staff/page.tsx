@@ -2,19 +2,25 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Store, Staff, JobType, StaffRank } from '@/types/database'
-import { JOB_TYPES, STAFF_RANKS } from '@/lib/constants'
+import { Store, Staff, JobType, StaffRank, StaffLeave } from '@/types/database'
+import { JOB_TYPES, STAFF_RANKS, getSeasonLabel } from '@/lib/constants'
 
 type StaffWithStore = Staff & { stores: { name: string } }
 
 export default function StaffPage() {
   const [staff, setStaff] = useState<StaffWithStore[]>([])
   const [stores, setStores] = useState<Store[]>([])
+  const [staffLeaves, setStaffLeaves] = useState<StaffLeave[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingStaff, setEditingStaff] = useState<Staff | null>(null)
   const [filterStore, setFilterStore] = useState<string>('')
   const [filterJobType, setFilterJobType] = useState<string>('')
+
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+  const [selectedMonth, setSelectedMonth] = useState(
+    new Date().getMonth() + 2 > 12 ? 1 : new Date().getMonth() + 2
+  )
 
   const [formData, setFormData] = useState({
     name: '',
@@ -26,6 +32,10 @@ export default function StaffPage() {
   useEffect(() => {
     fetchData()
   }, [])
+
+  useEffect(() => {
+    fetchLeaveData()
+  }, [selectedYear, selectedMonth])
 
   async function fetchData() {
     const [staffRes, storesRes] = await Promise.all([
@@ -44,6 +54,32 @@ export default function StaffPage() {
     setStaff((staffRes.data as StaffWithStore[]) || [])
     setStores(storesRes.data || [])
     setLoading(false)
+  }
+
+  async function fetchLeaveData() {
+    const { data } = await supabase
+      .from('staff_leaves')
+      .select('*')
+      .eq('year', selectedYear)
+      .eq('month', selectedMonth)
+
+    setStaffLeaves(data || [])
+  }
+
+  async function toggleLeave(staffId: string) {
+    const existingLeave = staffLeaves.find((l) => l.staff_id === staffId)
+
+    if (existingLeave) {
+      await supabase.from('staff_leaves').delete().eq('id', existingLeave.id)
+    } else {
+      await supabase.from('staff_leaves').insert({
+        staff_id: staffId,
+        year: selectedYear,
+        month: selectedMonth,
+      })
+    }
+
+    fetchLeaveData()
   }
 
   function openModal(staffMember?: Staff) {
@@ -138,31 +174,75 @@ export default function StaffPage() {
         </div>
       )}
 
-      <div className="flex gap-4 mb-6">
-        <select
-          value={filterStore}
-          onChange={(e) => setFilterStore(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">全店舗</option>
-          {stores.map((store) => (
-            <option key={store.id} value={store.id}>
-              {store.name}
-            </option>
-          ))}
-        </select>
-        <select
-          value={filterJobType}
-          onChange={(e) => setFilterJobType(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">全職種</option>
-          {JOB_TYPES.map((job) => (
-            <option key={job.value} value={job.value}>
-              {job.label}
-            </option>
-          ))}
-        </select>
+      <div className="bg-white rounded-lg shadow p-4 mb-6">
+        <div className="flex flex-wrap gap-4 items-center">
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">年</label>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className="px-4 py-2 border border-gray-300 rounded-md"
+            >
+              {[...Array(3)].map((_, i) => {
+                const year = new Date().getFullYear() + i
+                return (
+                  <option key={year} value={year}>
+                    {year}年
+                  </option>
+                )
+              })}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">月</label>
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(Number(e.target.value))}
+              className="px-4 py-2 border border-gray-300 rounded-md"
+            >
+              {[...Array(12)].map((_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  {i + 1}月
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">店舗</label>
+            <select
+              value={filterStore}
+              onChange={(e) => setFilterStore(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-md"
+            >
+              <option value="">全店舗</option>
+              {stores.map((store) => (
+                <option key={store.id} value={store.id}>
+                  {store.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">職種</label>
+            <select
+              value={filterJobType}
+              onChange={(e) => setFilterJobType(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-md"
+            >
+              <option value="">全職種</option>
+              {JOB_TYPES.map((job) => (
+                <option key={job.value} value={job.value}>
+                  {job.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="ml-auto">
+            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+              {getSeasonLabel(selectedMonth)}
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -173,53 +253,71 @@ export default function StaffPage() {
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">店舗</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">職種</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">ランク</th>
+              <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">
+                {selectedMonth}月の状態
+              </th>
               <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">操作</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {filteredStaff.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                   スタッフが登録されていません
                 </td>
               </tr>
             ) : (
-              filteredStaff.map((s) => (
-                <tr key={s.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">{s.name}</td>
-                  <td className="px-4 py-3">{s.stores.name}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${
-                        s.job_type === 'eyelist'
-                          ? 'bg-purple-100 text-purple-700'
-                          : 'bg-pink-100 text-pink-700'
-                      }`}
-                    >
-                      {JOB_TYPES.find((j) => j.value === s.job_type)?.label}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="px-2 py-1 bg-gray-100 rounded text-xs font-medium">
-                      {s.rank}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => openModal(s)}
-                      className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded text-sm mr-2"
-                    >
-                      編集
-                    </button>
-                    <button
-                      onClick={() => deleteStaff(s.id)}
-                      className="px-3 py-1 text-red-600 hover:bg-red-50 rounded text-sm"
-                    >
-                      削除
-                    </button>
-                  </td>
-                </tr>
-              ))
+              filteredStaff.map((s) => {
+                const isOnLeave = staffLeaves.some((l) => l.staff_id === s.id)
+                return (
+                  <tr key={s.id} className={`hover:bg-gray-50 ${isOnLeave ? 'bg-gray-100' : ''}`}>
+                    <td className="px-4 py-3">{s.name}</td>
+                    <td className="px-4 py-3">{s.stores.name}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-medium ${
+                          s.job_type === 'eyelist'
+                            ? 'bg-purple-100 text-purple-700'
+                            : 'bg-pink-100 text-pink-700'
+                        }`}
+                      >
+                        {JOB_TYPES.find((j) => j.value === s.job_type)?.label}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="px-2 py-1 bg-gray-100 rounded text-xs font-medium">
+                        {s.rank}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        onClick={() => toggleLeave(s.id)}
+                        className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                          isOnLeave
+                            ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                            : 'bg-green-100 text-green-700 hover:bg-green-200'
+                        }`}
+                      >
+                        {isOnLeave ? '休職中' : '出勤'}
+                      </button>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => openModal(s)}
+                        className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded text-sm mr-2"
+                      >
+                        編集
+                      </button>
+                      <button
+                        onClick={() => deleteStaff(s.id)}
+                        className="px-3 py-1 text-red-600 hover:bg-red-50 rounded text-sm"
+                      >
+                        削除
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })
             )}
           </tbody>
         </table>
