@@ -43,7 +43,12 @@ export function formatCurrency(value: number): string {
   }).format(value)
 }
 
-// 万の位で四捨五入（千の位を四捨五入）
+// 千の位で四捨五入（物販用）
 export function roundToThousand(value: number): number {
+  return Math.round(value / 1000) * 1000
+}
+
+// 万の位で四捨五入（施術用）
+export function roundToTenThousand(value: number): number {
   return Math.round(value / 10000) * 10000
 }

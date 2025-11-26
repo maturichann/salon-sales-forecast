@@ -1,5 +1,5 @@
 import { Staff, SalesStandard, HelpRecord, StaffLeave } from '@/types/database'
-import { getSeasonType } from './constants'
+import { getSeasonType, roundToThousand, roundToTenThousand } from './constants'
 
 export interface StaffForecast {
   staffId: string
@@ -152,20 +152,24 @@ export function calculateForecast(
       storeTotalRetail += adjustedRetail
     }
 
+    // 施術は万の位、物販は千の位で丸める
+    const roundedTreatment = roundToTenThousand(storeTotalTreatment)
+    const roundedRetail = roundToThousand(storeTotalRetail)
+
     results.push({
       storeId: store.id,
       storeName: store.name,
       staffForecasts,
       totalSales: {
-        total: storeTotalTreatment + storeTotalRetail,
-        treatment: storeTotalTreatment,
-        retail: storeTotalRetail,
+        total: roundedTreatment + roundedRetail,
+        treatment: roundedTreatment,
+        retail: roundedRetail,
       },
       helpReceived: { total: 0, treatment: 0, retail: 0 },
       finalSales: {
-        total: storeTotalTreatment + storeTotalRetail,
-        treatment: storeTotalTreatment,
-        retail: storeTotalRetail,
+        total: roundedTreatment + roundedRetail,
+        treatment: roundedTreatment,
+        retail: roundedRetail,
       },
     })
   }
@@ -174,10 +178,13 @@ export function calculateForecast(
   for (const result of results) {
     const helpReceived = helpAdditionsMap.get(result.storeId) || { total: 0, treatment: 0, retail: 0 }
     result.helpReceived = helpReceived
+    // ヘルプ加算後も施術は万、物販は千で丸める
+    const finalTreatment = roundToTenThousand(result.totalSales.treatment + helpReceived.treatment)
+    const finalRetail = roundToThousand(result.totalSales.retail + helpReceived.retail)
     result.finalSales = {
-      total: result.totalSales.total + helpReceived.total,
-      treatment: result.totalSales.treatment + helpReceived.treatment,
-      retail: result.totalSales.retail + helpReceived.retail,
+      total: finalTreatment + finalRetail,
+      treatment: finalTreatment,
+      retail: finalRetail,
     }
   }
 
