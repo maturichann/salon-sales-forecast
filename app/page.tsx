@@ -20,6 +20,7 @@ export default function HomePage() {
     new Date().getMonth() + 2 > 12 ? 1 : new Date().getMonth() + 2
   )
   const [expandedStores, setExpandedStores] = useState<Set<string>>(new Set())
+  const [isFukubukuroYear, setIsFukubukuroYear] = useState(false)
 
   useEffect(() => {
     fetchMasterData()
@@ -37,11 +38,12 @@ export default function HomePage() {
         salesStandards,
         helpRecords,
         staffLeaves,
-        selectedMonth
+        selectedMonth,
+        isFukubukuroYear
       )
       setForecasts(results)
     }
-  }, [stores, staff, salesStandards, helpRecords, staffLeaves, selectedMonth])
+  }, [stores, staff, salesStandards, helpRecords, staffLeaves, selectedMonth, isFukubukuroYear])
 
   async function fetchMasterData() {
     const [storesRes, staffRes, standardsRes] = await Promise.all([
@@ -155,6 +157,17 @@ export default function HomePage() {
             <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
               {getSeasonLabel(selectedMonth)}
             </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isFukubukuroYear}
+                onChange={(e) => setIsFukubukuroYear(e.target.checked)}
+                className="w-4 h-4 text-orange-600 rounded border-gray-300 focus:ring-orange-500"
+              />
+              <span className="text-sm text-gray-700">福袋実施年（物販2倍）</span>
+            </label>
           </div>
           <div className="ml-auto">
             <button

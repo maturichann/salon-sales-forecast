@@ -48,7 +48,8 @@ export function calculateForecast(
   salesStandards: SalesStandard[],
   helpRecords: HelpRecord[],
   staffLeaves: StaffLeave[],
-  month: number
+  month: number,
+  isFukubukuroYear: boolean = false
 ): StoreForecast[] {
   const seasonType = getSeasonType(month)
   const results: StoreForecast[] = []
@@ -94,7 +95,8 @@ export function calculateForecast(
 
       // 基準売上（固定金額）
       const baseTreatment = standard.treatment
-      const baseRetail = standard.retail
+      // 福袋実施年は物販2倍
+      const baseRetail = isFukubukuroYear ? standard.retail * 2 : standard.retail
       const baseTotal = baseTreatment + baseRetail
 
       // ヘルプによる減算を計算
