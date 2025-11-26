@@ -1,5 +1,5 @@
 import { Staff, SalesStandard, HelpRecord, StaffLeave } from '@/types/database'
-import { getSeasonType, roundToThousand } from './constants'
+import { getSeasonType } from './constants'
 
 export interface StaffForecast {
   staffId: string
@@ -157,15 +157,15 @@ export function calculateForecast(
       storeName: store.name,
       staffForecasts,
       totalSales: {
-        total: roundToThousand(storeTotalTreatment + storeTotalRetail),
-        treatment: roundToThousand(storeTotalTreatment),
-        retail: roundToThousand(storeTotalRetail),
+        total: storeTotalTreatment + storeTotalRetail,
+        treatment: storeTotalTreatment,
+        retail: storeTotalRetail,
       },
       helpReceived: { total: 0, treatment: 0, retail: 0 },
       finalSales: {
-        total: roundToThousand(storeTotalTreatment + storeTotalRetail),
-        treatment: roundToThousand(storeTotalTreatment),
-        retail: roundToThousand(storeTotalRetail),
+        total: storeTotalTreatment + storeTotalRetail,
+        treatment: storeTotalTreatment,
+        retail: storeTotalRetail,
       },
     })
   }
@@ -175,9 +175,9 @@ export function calculateForecast(
     const helpReceived = helpAdditionsMap.get(result.storeId) || { total: 0, treatment: 0, retail: 0 }
     result.helpReceived = helpReceived
     result.finalSales = {
-      total: roundToThousand(result.totalSales.total + helpReceived.total),
-      treatment: roundToThousand(result.totalSales.treatment + helpReceived.treatment),
-      retail: roundToThousand(result.totalSales.retail + helpReceived.retail),
+      total: result.totalSales.total + helpReceived.total,
+      treatment: result.totalSales.treatment + helpReceived.treatment,
+      retail: result.totalSales.retail + helpReceived.retail,
     }
   }
 
