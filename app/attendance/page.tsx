@@ -2,15 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Store, Staff, MonthlyAttendance, HelpRecord } from '@/types/database'
+import { Store, Staff, HelpRecord } from '@/types/database'
 import { JOB_TYPES, getSeasonLabel } from '@/lib/constants'
 
 type StaffWithStore = Staff & { stores: { name: string } }
 
-export default function AttendancePage() {
+export default function HelpPage() {
   const [stores, setStores] = useState<Store[]>([])
   const [staff, setStaff] = useState<StaffWithStore[]>([])
-  const [attendance, setAttendance] = useState<MonthlyAttendance[]>([])
   const [helpRecords, setHelpRecords] = useState<HelpRecord[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -32,10 +31,10 @@ export default function AttendancePage() {
   }, [])
 
   useEffect(() => {
-    if (selectedStore) {
-      fetchAttendanceData()
+    if (selectedStore && staff.length > 0) {
+      fetchHelpData()
     }
-  }, [selectedYear, selectedMonth, selectedStore])
+  }, [selectedYear, selectedMonth, selectedStore, staff])
 
   async function fetchData() {
     const [storesRes, staffRes] = await Promise.all([
@@ -56,47 +55,23 @@ export default function AttendancePage() {
     setLoading(false)
   }
 
-  async function fetchAttendanceData() {
+  async function fetchHelpData() {
     const storeStaff = staff.filter((s) => s.store_id === selectedStore)
     const staffIds = storeStaff.map((s) => s.id)
 
-    const [attendanceRes, helpRes] = await Promise.all([
-      supabase
-        .from('monthly_attendance')
-        .select('*')
-        .eq('year', selectedYear)
-        .eq('month', selectedMonth)
-        .in('staff_id', staffIds),
-      supabase
-        .from('help_records')
-        .select('*')
-        .eq('year', selectedYear)
-        .eq('month', selectedMonth)
-        .in('staff_id', staffIds),
-    ])
-
-    setAttendance(attendanceRes.data || [])
-    setHelpRecords(helpRes.data || [])
-  }
-
-  async function updateAttendance(staffId: string, workingDays: number) {
-    const existing = attendance.find((a) => a.staff_id === staffId)
-
-    if (existing) {
-      await supabase
-        .from('monthly_attendance')
-        .update({ working_days: workingDays })
-        .eq('id', existing.id)
-    } else {
-      await supabase.from('monthly_attendance').insert({
-        staff_id: staffId,
-        year: selectedYear,
-        month: selectedMonth,
-        working_days: workingDays,
-      })
+    if (staffIds.length === 0) {
+      setHelpRecords([])
+      return
     }
 
-    fetchAttendanceData()
+    const { data } = await supabase
+      .from('help_records')
+      .select('*')
+      .eq('year', selectedYear)
+      .eq('month', selectedMonth)
+      .in('staff_id', staffIds)
+
+    setHelpRecords(data || [])
   }
 
   function openHelpModal(staffId?: string, helpRecord?: HelpRecord) {
@@ -133,17 +108,18 @@ export default function AttendancePage() {
     if (editingHelpId) {
       await supabase.from('help_records').update(data).eq('id', editingHelpId)
     } else {
+      // 新規追加（何回でも追加可能）
       await supabase.from('help_records').insert(data)
     }
 
     setShowHelpModal(false)
-    fetchAttendanceData()
+    fetchHelpData()
   }
 
   async function deleteHelp(id: string) {
     if (!confirm('このヘルプ記録を削除しますか？')) return
     await supabase.from('help_records').delete().eq('id', id)
-    fetchAttendanceData()
+    fetchHelpData()
   }
 
   const storeStaff = staff.filter((s) => s.store_id === selectedStore)
@@ -155,7 +131,7 @@ export default function AttendancePage() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">出勤・ヘルプ入力</h1>
+      <h1 className="text-2xl font-bold mb-6">ヘルプ入力</h1>
 
       <div className="bg-white rounded-lg shadow p-4 mb-6">
         <div className="flex flex-wrap gap-4 items-center">
@@ -191,7 +167,7 @@ export default function AttendancePage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">店舗</label>
+            <label className="block text-sm text-gray-600 mb-1">所属店舗</label>
             <select
               value={selectedStore}
               onChange={(e) => setSelectedStore(e.target.value)}
@@ -219,20 +195,18 @@ export default function AttendancePage() {
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">スタッフ</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">職種</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">ランク</th>
-              <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">出勤日数</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">ヘルプ</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">ヘルプ先</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {storeStaff.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
                   この店舗にスタッフが登録されていません
                 </td>
               </tr>
             ) : (
               storeStaff.map((s) => {
-                const att = attendance.find((a) => a.staff_id === s.id)
                 const helps = helpRecords.filter((h) => h.staff_id === s.id)
 
                 return (
@@ -255,19 +229,8 @@ export default function AttendancePage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <input
-                        type="number"
-                        min="0"
-                        max="31"
-                        value={att?.working_days || ''}
-                        onChange={(e) => updateAttendance(s.id, Number(e.target.value))}
-                        placeholder="0"
-                        className="w-20 px-3 py-1 border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </td>
-                    <td className="px-4 py-3">
                       <div className="flex flex-col gap-1">
-                        {helps.map((h) => {
+                        {helps.map((h, index) => {
                           const toStore = stores.find((st) => st.id === h.to_store_id)
                           return (
                             <div
@@ -275,7 +238,7 @@ export default function AttendancePage() {
                               className="flex items-center gap-2 text-sm bg-orange-50 px-2 py-1 rounded"
                             >
                               <span className="text-orange-700">
-                                → {toStore?.name} (-{h.deduction_percent}% / +{h.addition_percent}%)
+                                {index + 1}回目: {toStore?.name} (所属-{h.deduction_percent}% / ヘルプ先+{h.addition_percent}%)
                               </span>
                               <button
                                 onClick={() => openHelpModal(s.id, h)}

@@ -7,7 +7,7 @@ const navItems = [
   { href: '/', label: '売上予測' },
   { href: '/stores', label: '店舗管理' },
   { href: '/staff', label: 'スタッフ管理' },
-  { href: '/attendance', label: '出勤・ヘルプ入力' },
+  { href: '/attendance', label: 'ヘルプ入力' },
   { href: '/history', label: '予測履歴' },
 ]
 
