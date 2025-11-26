@@ -153,15 +153,15 @@ export function calculateForecast(
       storeName: store.name,
       staffForecasts,
       totalSales: {
-        total: storeTotalTreatment + storeTotalRetail,
-        treatment: storeTotalTreatment,
-        retail: storeTotalRetail,
+        total: roundToThousand(storeTotalTreatment + storeTotalRetail),
+        treatment: roundToThousand(storeTotalTreatment),
+        retail: roundToThousand(storeTotalRetail),
       },
       helpReceived: { total: 0, treatment: 0, retail: 0 },
       finalSales: {
-        total: storeTotalTreatment + storeTotalRetail,
-        treatment: storeTotalTreatment,
-        retail: storeTotalRetail,
+        total: roundToThousand(storeTotalTreatment + storeTotalRetail),
+        treatment: roundToThousand(storeTotalTreatment),
+        retail: roundToThousand(storeTotalRetail),
       },
     })
   }
@@ -171,9 +171,9 @@ export function calculateForecast(
     const helpReceived = helpAdditionsMap.get(result.storeId) || { total: 0, treatment: 0, retail: 0 }
     result.helpReceived = helpReceived
     result.finalSales = {
-      total: result.totalSales.total + helpReceived.total,
-      treatment: result.totalSales.treatment + helpReceived.treatment,
-      retail: result.totalSales.retail + helpReceived.retail,
+      total: roundToThousand(result.totalSales.total + helpReceived.total),
+      treatment: roundToThousand(result.totalSales.treatment + helpReceived.treatment),
+      retail: roundToThousand(result.totalSales.retail + helpReceived.retail),
     }
   }
 
