@@ -310,11 +310,14 @@ export default function StaffPage() {
                             : 'bg-green-100 text-green-700 border-green-300'
                         }`}
                       >
-                        <option value={1}>100%</option>
-                        <option value={0.75}>75%</option>
-                        <option value={0.5}>50%</option>
-                        <option value={0.25}>25%</option>
-                        <option value={0}>休職</option>
+                        {[...Array(21)].map((_, i) => {
+                          const value = (100 - i * 5) / 100
+                          return (
+                            <option key={value} value={value}>
+                              {value === 0 ? '休職' : `${Math.round(value * 100)}%`}
+                            </option>
+                          )
+                        })}
                       </select>
                     </td>
                     <td className="px-4 py-3 text-right">
