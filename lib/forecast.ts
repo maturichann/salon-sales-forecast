@@ -152,9 +152,9 @@ export function calculateForecast(
       storeTotalRetail += adjustedRetail
     }
 
-    // 施術は万の位、物販は千の位で丸める
+    // 施術・物販ともに万の位で丸める
     const roundedTreatment = roundToTenThousand(storeTotalTreatment)
-    const roundedRetail = roundToThousand(storeTotalRetail)
+    const roundedRetail = roundToTenThousand(storeTotalRetail)
 
     results.push({
       storeId: store.id,
@@ -178,9 +178,9 @@ export function calculateForecast(
   for (const result of results) {
     const helpReceived = helpAdditionsMap.get(result.storeId) || { total: 0, treatment: 0, retail: 0 }
     result.helpReceived = helpReceived
-    // ヘルプ加算後も施術は万、物販は千で丸める
+    // ヘルプ加算後も万の位で丸める
     const finalTreatment = roundToTenThousand(result.totalSales.treatment + helpReceived.treatment)
-    const finalRetail = roundToThousand(result.totalSales.retail + helpReceived.retail)
+    const finalRetail = roundToTenThousand(result.totalSales.retail + helpReceived.retail)
     result.finalSales = {
       total: finalTreatment + finalRetail,
       treatment: finalTreatment,
