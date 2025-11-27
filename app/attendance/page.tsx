@@ -305,11 +305,17 @@ export default function HelpPage() {
                   min="0"
                   max="100"
                   step="0.1"
-                  value={helpForm.deduction_percent}
-                  onChange={(e) =>
-                    setHelpForm({ ...helpForm, deduction_percent: Number(e.target.value) })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md"
+                  value={helpForm.deduction_percent || ''}
+                  placeholder="0"
+                  onChange={(e) => {
+                    const value = Number(e.target.value)
+                    setHelpForm({
+                      ...helpForm,
+                      deduction_percent: value,
+                      addition_percent: value // 連動して加算も同じ値に
+                    })
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md placeholder-gray-400"
                 />
               </div>
               <div>
@@ -321,11 +327,12 @@ export default function HelpPage() {
                   min="0"
                   max="100"
                   step="0.1"
-                  value={helpForm.addition_percent}
+                  value={helpForm.addition_percent || ''}
+                  placeholder="0"
                   onChange={(e) =>
                     setHelpForm({ ...helpForm, addition_percent: Number(e.target.value) })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md placeholder-gray-400"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-4">
