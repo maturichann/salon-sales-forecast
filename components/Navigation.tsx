@@ -10,7 +10,7 @@ const navItems = [
   { href: '/staff', label: 'スタッフ管理', shortLabel: 'スタッフ' },
   { href: '/attendance', label: 'ヘルプ入力', shortLabel: 'ヘルプ' },
   { href: '/history', label: '予測履歴', shortLabel: '履歴' },
-  { href: '/guide', label: '使い方', shortLabel: '?' },
+  { href: '/guide', label: '使い方', shortLabel: '使い方' },
 ]
 
 export default function Navigation() {
