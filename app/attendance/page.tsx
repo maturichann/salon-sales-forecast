@@ -131,16 +131,15 @@ export default function HelpPage() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">ヘルプ入力</h1>
+      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">ヘルプ入力</h1>
 
-      <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="flex flex-wrap gap-4 items-center">
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">年</label>
+      <div className="bg-white rounded-lg shadow p-3 sm:p-4 mb-6">
+        <div className="flex flex-wrap gap-2 sm:gap-3 items-center">
+          <div className="flex gap-2">
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="px-4 py-2 border border-gray-300 rounded-md"
+              className="px-2 sm:px-3 py-2 border border-gray-300 rounded-md text-sm"
             >
               {[...Array(3)].map((_, i) => {
                 const year = new Date().getFullYear() + i
@@ -151,13 +150,10 @@ export default function HelpPage() {
                 )
               })}
             </select>
-          </div>
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">月</label>
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              className="px-4 py-2 border border-gray-300 rounded-md"
+              className="px-2 sm:px-3 py-2 border border-gray-300 rounded-md text-sm"
             >
               {[...Array(12)].map((_, i) => (
                 <option key={i + 1} value={i + 1}>
@@ -166,114 +162,105 @@ export default function HelpPage() {
               ))}
             </select>
           </div>
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">所属店舗</label>
-            <select
-              value={selectedStore}
-              onChange={(e) => setSelectedStore(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-md"
-            >
-              {stores.map((store) => (
-                <option key={store.id} value={store.id}>
-                  {store.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="ml-auto">
-            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
-              {getSeasonLabel(selectedMonth)}
-            </span>
-          </div>
+          <select
+            value={selectedStore}
+            onChange={(e) => setSelectedStore(e.target.value)}
+            className="px-2 sm:px-3 py-2 border border-gray-300 rounded-md text-sm"
+          >
+            {stores.map((store) => (
+              <option key={store.id} value={store.id}>
+                {store.name}
+              </option>
+            ))}
+          </select>
+          <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs ml-auto">
+            {getSeasonLabel(selectedMonth)}
+          </span>
         </div>
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">スタッフ</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">職種</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">ランク</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">ヘルプ先</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {storeStaff.length === 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[500px]">
+            <thead className="bg-gray-50">
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
-                  この店舗にスタッフが登録されていません
-                </td>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-600">スタッフ</th>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-600">職種</th>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-600">ヘルプ先</th>
               </tr>
-            ) : (
-              storeStaff.map((s) => {
-                const helps = helpRecords.filter((h) => h.staff_id === s.id)
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {storeStaff.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="px-4 py-8 text-center text-gray-500 text-sm">
+                    この店舗にスタッフが登録されていません
+                  </td>
+                </tr>
+              ) : (
+                storeStaff.map((s) => {
+                  const helps = helpRecords.filter((h) => h.staff_id === s.id)
 
-                return (
-                  <tr key={s.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium">{s.name}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          s.job_type === 'eyelist'
-                            ? 'bg-purple-100 text-purple-700'
-                            : 'bg-pink-100 text-pink-700'
-                        }`}
-                      >
-                        {JOB_TYPES.find((j) => j.value === s.job_type)?.label}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="px-2 py-1 bg-gray-100 rounded text-xs font-medium">
-                        {s.rank}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-col gap-1">
-                        {helps.map((h, index) => {
-                          const toStore = stores.find((st) => st.id === h.to_store_id)
-                          return (
-                            <div
-                              key={h.id}
-                              className="flex items-center gap-2 text-sm bg-orange-50 px-2 py-1 rounded"
-                            >
-                              <span className="text-orange-700">
-                                {index + 1}回目: {toStore?.name} (所属-{h.deduction_percent}% / ヘルプ先+{h.addition_percent}%)
-                              </span>
-                              <button
-                                onClick={() => openHelpModal(s.id, h)}
-                                className="text-blue-600 hover:underline text-xs"
-                              >
-                                編集
-                              </button>
-                              <button
-                                onClick={() => deleteHelp(h.id)}
-                                className="text-red-600 hover:underline text-xs"
-                              >
-                                削除
-                              </button>
-                            </div>
-                          )
-                        })}
-                        <button
-                          onClick={() => openHelpModal(s.id)}
-                          className="text-sm text-blue-600 hover:underline text-left"
+                  return (
+                    <tr key={s.id} className="hover:bg-gray-50">
+                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium">{s.name}</td>
+                      <td className="px-2 sm:px-4 py-2 sm:py-3">
+                        <span
+                          className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                            s.job_type === 'eyelist'
+                              ? 'bg-purple-100 text-purple-700'
+                              : 'bg-pink-100 text-pink-700'
+                          }`}
                         >
-                          + ヘルプ追加
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })
-            )}
-          </tbody>
-        </table>
+                          {s.rank}
+                        </span>
+                      </td>
+                      <td className="px-2 sm:px-4 py-2 sm:py-3">
+                        <div className="flex flex-col gap-1">
+                          {helps.map((h, index) => {
+                            const toStore = stores.find((st) => st.id === h.to_store_id)
+                            return (
+                              <div
+                                key={h.id}
+                                className="flex flex-wrap items-center gap-1 text-xs bg-orange-50 px-2 py-1 rounded"
+                              >
+                                <span className="text-orange-700">
+                                  {toStore?.name} (-{h.deduction_percent}%/+{h.addition_percent}%)
+                                </span>
+                                <button
+                                  onClick={() => openHelpModal(s.id, h)}
+                                  className="text-blue-600 hover:underline"
+                                >
+                                  編集
+                                </button>
+                                <button
+                                  onClick={() => deleteHelp(h.id)}
+                                  className="text-red-600 hover:underline"
+                                >
+                                  削除
+                                </button>
+                              </div>
+                            )
+                          })}
+                          <button
+                            onClick={() => openHelpModal(s.id)}
+                            className="text-xs text-blue-600 hover:underline text-left"
+                          >
+                            + 追加
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {showHelpModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">
               {editingHelpId ? 'ヘルプ編集' : 'ヘルプ追加'}
             </h2>

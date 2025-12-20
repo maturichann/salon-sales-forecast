@@ -121,13 +121,12 @@ export default function HomePage() {
       <h1 className="text-2xl font-bold mb-6">売上予測</h1>
 
       <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="flex flex-wrap gap-4 items-center">
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">年</label>
+        <div className="flex flex-wrap gap-3 items-center">
+          <div className="flex gap-2">
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="px-4 py-2 border border-gray-300 rounded-md"
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
             >
               {[...Array(3)].map((_, i) => {
                 const year = new Date().getFullYear() + i
@@ -138,13 +137,10 @@ export default function HomePage() {
                 )
               })}
             </select>
-          </div>
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">月</label>
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              className="px-4 py-2 border border-gray-300 rounded-md"
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
             >
               {[...Array(12)].map((_, i) => (
                 <option key={i + 1} value={i + 1}>
@@ -153,49 +149,43 @@ export default function HomePage() {
               ))}
             </select>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
-              {getSeasonLabel(selectedMonth)}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isFukubukuroYear}
-                onChange={(e) => setIsFukubukuroYear(e.target.checked)}
-                className="w-4 h-4 text-orange-600 rounded border-gray-300 focus:ring-orange-500"
-              />
-              <span className="text-sm text-gray-700">福袋実施年（物販2倍）</span>
-            </label>
-          </div>
-          <div className="ml-auto">
-            <button
-              onClick={saveForecast}
-              className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-            >
-              予測を保存
-            </button>
-          </div>
+          <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+            {getSeasonLabel(selectedMonth)}
+          </span>
+          <label className="flex items-center gap-1.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isFukubukuroYear}
+              onChange={(e) => setIsFukubukuroYear(e.target.checked)}
+              className="w-4 h-4 text-orange-600 rounded border-gray-300 focus:ring-orange-500"
+            />
+            <span className="text-xs text-gray-700">福袋</span>
+          </label>
+          <button
+            onClick={saveForecast}
+            className="ml-auto px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
+          >
+            保存
+          </button>
         </div>
       </div>
 
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow p-6 mb-6 text-white">
-        <h2 className="text-lg font-medium mb-4">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow p-4 sm:p-6 mb-6 text-white">
+        <h2 className="text-base sm:text-lg font-medium mb-3">
           {selectedYear}年{selectedMonth}月 全店舗合計
         </h2>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
           <div>
-            <p className="text-blue-200 text-sm">施術売上</p>
-            <p className="text-2xl font-bold">{formatCurrency(grandTotal.treatment)}</p>
+            <p className="text-blue-200 text-xs sm:text-sm">施術</p>
+            <p className="text-sm sm:text-2xl font-bold">{formatCurrency(grandTotal.treatment)}</p>
           </div>
           <div>
-            <p className="text-blue-200 text-sm">物販売上</p>
-            <p className="text-2xl font-bold">{formatCurrency(grandTotal.retail)}</p>
+            <p className="text-blue-200 text-xs sm:text-sm">物販</p>
+            <p className="text-sm sm:text-2xl font-bold">{formatCurrency(grandTotal.retail)}</p>
           </div>
           <div>
-            <p className="text-blue-200 text-sm">総売上</p>
-            <p className="text-3xl font-bold">{formatCurrency(grandTotal.total)}</p>
+            <p className="text-blue-200 text-xs sm:text-sm">総売上</p>
+            <p className="text-lg sm:text-3xl font-bold">{formatCurrency(grandTotal.total)}</p>
           </div>
         </div>
       </div>
@@ -204,100 +194,101 @@ export default function HomePage() {
         {forecasts.map((forecast) => (
           <div key={forecast.storeId} className="bg-white rounded-lg shadow overflow-hidden">
             <div
-              className="p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50"
+              className="p-3 sm:p-4 cursor-pointer hover:bg-gray-50"
               onClick={() => toggleStore(forecast.storeId)}
             >
-              <div className="flex items-center gap-4">
-                <span className="text-lg font-medium">{forecast.storeName}</span>
-                {forecast.helpReceived.total > 0 && (
-                  <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">
-                    ヘルプ受入: {formatCurrency(forecast.helpReceived.total)}
-                  </span>
-                )}
+              <div className="flex items-center justify-between mb-2 sm:mb-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm sm:text-lg font-medium">{forecast.storeName}</span>
+                  {forecast.helpReceived.total > 0 && (
+                    <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded hidden sm:inline">
+                      +{formatCurrency(forecast.helpReceived.total)}
+                    </span>
+                  )}
+                </div>
+                <span className="text-gray-400 sm:hidden">
+                  {expandedStores.has(forecast.storeId) ? '▲' : '▼'}
+                </span>
               </div>
-              <div className="flex items-center gap-6">
-                <div className="text-right">
-                  <p className="text-xs text-gray-500">施術</p>
-                  <p className="font-medium">{formatCurrency(forecast.finalSales.treatment)}</p>
+              <div className="flex items-center justify-between">
+                <div className="flex gap-3 sm:gap-6">
+                  <div className="text-left sm:text-right">
+                    <p className="text-xs text-gray-500">施術</p>
+                    <p className="text-xs sm:text-base font-medium">{formatCurrency(forecast.finalSales.treatment)}</p>
+                  </div>
+                  <div className="text-left sm:text-right">
+                    <p className="text-xs text-gray-500">物販</p>
+                    <p className="text-xs sm:text-base font-medium">{formatCurrency(forecast.finalSales.retail)}</p>
+                  </div>
+                  <div className="text-left sm:text-right">
+                    <p className="text-xs text-gray-500">合計</p>
+                    <p className="text-sm sm:text-lg font-bold text-blue-600">
+                      {formatCurrency(forecast.finalSales.total)}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs text-gray-500">物販</p>
-                  <p className="font-medium">{formatCurrency(forecast.finalSales.retail)}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-gray-500">合計</p>
-                  <p className="text-lg font-bold text-blue-600">
-                    {formatCurrency(forecast.finalSales.total)}
-                  </p>
-                </div>
-                <span className="text-gray-400">
+                <span className="text-gray-400 hidden sm:inline">
                   {expandedStores.has(forecast.storeId) ? '▲' : '▼'}
                 </span>
               </div>
             </div>
 
             {expandedStores.has(forecast.storeId) && (
-              <div className="border-t">
-                <table className="w-full">
+              <div className="border-t overflow-x-auto">
+                <table className="w-full min-w-[500px]">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500">
                         スタッフ
                       </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">
-                        職種/ランク
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500">
+                        職種
                       </th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">
+                      <th className="px-2 sm:px-4 py-2 text-right text-xs font-medium text-gray-500">
                         施術
                       </th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">
+                      <th className="px-2 sm:px-4 py-2 text-right text-xs font-medium text-gray-500">
                         物販
                       </th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">
+                      <th className="px-2 sm:px-4 py-2 text-right text-xs font-medium text-gray-500">
                         合計
-                      </th>
-                      <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">
-                        ヘルプ
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {forecast.staffForecasts.map((sf) => (
                       <tr key={sf.staffId} className="hover:bg-gray-50">
-                        <td className="px-4 py-2 font-medium">{sf.staffName}</td>
-                        <td className="px-4 py-2">
+                        <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium">
+                          {sf.staffName}
+                          {sf.helpDeductions > 0 && (
+                            <span className="ml-1 text-xs text-red-600">-{sf.helpDeductions}%</span>
+                          )}
+                        </td>
+                        <td className="px-2 sm:px-4 py-2">
                           <span
-                            className={`px-2 py-0.5 rounded text-xs ${
+                            className={`px-1.5 py-0.5 rounded text-xs ${
                               sf.jobType === 'eyelist'
                                 ? 'bg-purple-100 text-purple-700'
                                 : 'bg-pink-100 text-pink-700'
                             }`}
                           >
-                            {JOB_TYPES.find((j) => j.value === sf.jobType)?.label}
-                          </span>
-                          <span className="ml-1 px-2 py-0.5 bg-gray-100 rounded text-xs">
                             {sf.rank}
                           </span>
                         </td>
-                        <td className="px-4 py-2 text-right">
+                        <td className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm">
                           {formatCurrency(sf.adjustedSales.treatment)}
                         </td>
-                        <td className="px-4 py-2 text-right">
+                        <td className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm">
                           {formatCurrency(sf.adjustedSales.retail)}
                         </td>
-                        <td className="px-4 py-2 text-right font-medium">
+                        <td className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm font-medium">
                           {formatCurrency(sf.adjustedSales.total)}
-                        </td>
-                        <td className="px-4 py-2 text-center">
-                          {sf.helpDeductions > 0 && (
-                            <span className="text-xs text-red-600">-{sf.helpDeductions}%</span>
-                          )}
                         </td>
                       </tr>
                     ))}
                     {forecast.staffForecasts.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="px-4 py-4 text-center text-gray-500 text-sm">
+                        <td colSpan={5} className="px-4 py-4 text-center text-gray-500 text-sm">
                           スタッフが登録されていません
                         </td>
                       </tr>
