@@ -190,46 +190,63 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-2 sm:space-y-4">
         {forecasts.map((forecast) => (
           <div key={forecast.storeId} className="bg-white rounded-lg shadow overflow-hidden">
             <div
               className="p-3 sm:p-4 cursor-pointer hover:bg-gray-50"
               onClick={() => toggleStore(forecast.storeId)}
             >
-              <div className="flex items-center justify-between mb-2 sm:mb-0">
+              {/* モバイル: 縦並び */}
+              <div className="sm:hidden">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium">{forecast.storeName}</span>
+                  <span className="text-gray-400">
+                    {expandedStores.has(forecast.storeId) ? '▲' : '▼'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <p className="text-xs text-gray-500">施術</p>
+                    <p className="text-xs font-medium">{formatCurrency(forecast.finalSales.treatment)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">物販</p>
+                    <p className="text-xs font-medium">{formatCurrency(forecast.finalSales.retail)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">合計</p>
+                    <p className="text-xs font-bold text-blue-600">{formatCurrency(forecast.finalSales.total)}</p>
+                  </div>
+                </div>
+              </div>
+              {/* デスクトップ: 横並び */}
+              <div className="hidden sm:flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm sm:text-lg font-medium">{forecast.storeName}</span>
+                  <span className="text-lg font-medium">{forecast.storeName}</span>
                   {forecast.helpReceived.total > 0 && (
-                    <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded hidden sm:inline">
+                    <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">
                       +{formatCurrency(forecast.helpReceived.total)}
                     </span>
                   )}
                 </div>
-                <span className="text-gray-400 sm:hidden">
-                  {expandedStores.has(forecast.storeId) ? '▲' : '▼'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex gap-3 sm:gap-6">
-                  <div className="text-left sm:text-right">
+                <div className="flex items-center gap-6">
+                  <div className="text-right">
                     <p className="text-xs text-gray-500">施術</p>
-                    <p className="text-xs sm:text-base font-medium">{formatCurrency(forecast.finalSales.treatment)}</p>
+                    <p className="font-medium">{formatCurrency(forecast.finalSales.treatment)}</p>
                   </div>
-                  <div className="text-left sm:text-right">
+                  <div className="text-right">
                     <p className="text-xs text-gray-500">物販</p>
-                    <p className="text-xs sm:text-base font-medium">{formatCurrency(forecast.finalSales.retail)}</p>
+                    <p className="font-medium">{formatCurrency(forecast.finalSales.retail)}</p>
                   </div>
-                  <div className="text-left sm:text-right">
+                  <div className="text-right">
                     <p className="text-xs text-gray-500">合計</p>
-                    <p className="text-sm sm:text-lg font-bold text-blue-600">
-                      {formatCurrency(forecast.finalSales.total)}
-                    </p>
+                    <p className="text-lg font-bold text-blue-600">{formatCurrency(forecast.finalSales.total)}</p>
                   </div>
+                  <span className="text-gray-400">
+                    {expandedStores.has(forecast.storeId) ? '▲' : '▼'}
+                  </span>
                 </div>
-                <span className="text-gray-400 hidden sm:inline">
-                  {expandedStores.has(forecast.storeId) ? '▲' : '▼'}
-                </span>
               </div>
             </div>
 
