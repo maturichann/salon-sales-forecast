@@ -1,6 +1,7 @@
 'use client'
+/* eslint-disable react-hooks/set-state-in-effect */
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Store, Staff, JobType, StaffRank, StaffLeave } from '@/types/database'
 import { JOB_TYPES, STAFF_RANKS, getSeasonLabel } from '@/lib/constants'
@@ -17,10 +18,15 @@ export default function StaffPage() {
   const [filterStore, setFilterStore] = useState<string>('')
   const [filterJobType, setFilterJobType] = useState<string>('')
 
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
-  const [selectedMonth, setSelectedMonth] = useState(
-    new Date().getMonth() + 2 > 12 ? 1 : new Date().getMonth() + 2
-  )
+  const [selectedYear, setSelectedYear] = useState(() => {
+    const now = new Date()
+    const nextMonth = now.getMonth() + 2
+    return nextMonth > 12 ? now.getFullYear() + 1 : now.getFullYear()
+  })
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const nextMonth = new Date().getMonth() + 2
+    return nextMonth > 12 ? 1 : nextMonth
+  })
 
   const [formData, setFormData] = useState({
     name: '',
@@ -29,15 +35,7 @@ export default function StaffPage() {
     rank: 'J-1' as StaffRank,
   })
 
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  useEffect(() => {
-    fetchLeaveData()
-  }, [selectedYear, selectedMonth])
-
-  async function fetchData() {
+  const fetchData = useCallback(async () => {
     const [staffRes, storesRes] = await Promise.all([
       supabase
         .from('staff')
@@ -54,9 +52,9 @@ export default function StaffPage() {
     setStaff((staffRes.data as StaffWithStore[]) || [])
     setStores(storesRes.data || [])
     setLoading(false)
-  }
+  }, [])
 
-  async function fetchLeaveData() {
+  const fetchLeaveData = useCallback(async () => {
     const { data } = await supabase
       .from('staff_leaves')
       .select('*')
@@ -64,7 +62,15 @@ export default function StaffPage() {
       .eq('month', selectedMonth)
 
     setStaffLeaves(data || [])
-  }
+  }, [selectedMonth, selectedYear])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  useEffect(() => {
+    fetchLeaveData()
+  }, [fetchLeaveData])
 
   async function updateWorkRatio(staffId: string, workRatio: number) {
     const existingLeave = staffLeaves.find((l) => l.staff_id === staffId)

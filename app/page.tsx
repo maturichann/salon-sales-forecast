@@ -1,10 +1,11 @@
 'use client'
+/* eslint-disable react-hooks/set-state-in-effect */
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Store, Staff, SalesStandard, HelpRecord, StaffLeave } from '@/types/database'
 import { calculateForecast, StoreForecast } from '@/lib/forecast'
-import { formatCurrency, getSeasonLabel, JOB_TYPES } from '@/lib/constants'
+import { formatCurrency, getSeasonLabel } from '@/lib/constants'
 
 export default function HomePage() {
   const [stores, setStores] = useState<Store[]>([])
@@ -16,8 +17,9 @@ export default function HomePage() {
   const [forecasts, setForecasts] = useState<StoreForecast[]>([])
 
   const [selectedYear, setSelectedYear] = useState(() => {
-    const nextMonth = new Date().getMonth() + 2
-    return nextMonth > 12 ? 2026 : 2026
+    const now = new Date()
+    const nextMonth = now.getMonth() + 2
+    return nextMonth > 12 ? now.getFullYear() + 1 : now.getFullYear()
   })
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const nextMonth = new Date().getMonth() + 2
@@ -26,30 +28,7 @@ export default function HomePage() {
   const [expandedStores, setExpandedStores] = useState<Set<string>>(new Set())
   const [isFukubukuroYear, setIsFukubukuroYear] = useState(false)
 
-  useEffect(() => {
-    fetchMasterData()
-  }, [])
-
-  useEffect(() => {
-    fetchMonthlyData()
-  }, [selectedYear, selectedMonth])
-
-  useEffect(() => {
-    if (stores.length && staff.length && salesStandards.length) {
-      const results = calculateForecast(
-        stores,
-        staff,
-        salesStandards,
-        helpRecords,
-        staffLeaves,
-        selectedMonth,
-        isFukubukuroYear
-      )
-      setForecasts(results)
-    }
-  }, [stores, staff, salesStandards, helpRecords, staffLeaves, selectedMonth, isFukubukuroYear])
-
-  async function fetchMasterData() {
+  const fetchMasterData = useCallback(async () => {
     const [storesRes, staffRes, standardsRes] = await Promise.all([
       supabase.from('stores').select('*').order('created_at'),
       supabase.from('staff').select('*').order('name'),
@@ -60,9 +39,9 @@ export default function HomePage() {
     setStaff(staffRes.data || [])
     setSalesStandards(standardsRes.data || [])
     setLoading(false)
-  }
+  }, [])
 
-  async function fetchMonthlyData() {
+  const fetchMonthlyData = useCallback(async () => {
     const [helpRes, leavesRes] = await Promise.all([
       supabase
         .from('help_records')
@@ -78,7 +57,30 @@ export default function HomePage() {
 
     setHelpRecords(helpRes.data || [])
     setStaffLeaves(leavesRes.data || [])
-  }
+  }, [selectedMonth, selectedYear])
+
+  useEffect(() => {
+    fetchMasterData()
+  }, [fetchMasterData])
+
+  useEffect(() => {
+    fetchMonthlyData()
+  }, [fetchMonthlyData])
+
+  useEffect(() => {
+    if (stores.length && staff.length && salesStandards.length) {
+      const results = calculateForecast(
+        stores,
+        staff,
+        salesStandards,
+        helpRecords,
+        staffLeaves,
+        selectedMonth,
+        isFukubukuroYear
+      )
+      setForecasts(results)
+    }
+  }, [stores, staff, salesStandards, helpRecords, staffLeaves, selectedMonth, isFukubukuroYear])
 
   async function saveForecast() {
     for (const forecast of forecasts) {
@@ -133,7 +135,7 @@ export default function HomePage() {
               className="px-3 py-2 border border-gray-300 rounded-md text-sm"
             >
               {[...Array(3)].map((_, i) => {
-                const year = 2026 + i
+                const year = new Date().getFullYear() + i
                 return (
                   <option key={year} value={year}>
                     {year}年

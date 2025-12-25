@@ -1,6 +1,7 @@
 'use client'
+/* eslint-disable react-hooks/set-state-in-effect */
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Store } from '@/types/database'
 
@@ -11,11 +12,7 @@ export default function StoresPage() {
   const [editingName, setEditingName] = useState('')
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchStores()
-  }, [])
-
-  async function fetchStores() {
+  const fetchStores = useCallback(async () => {
     const { data, error } = await supabase
       .from('stores')
       .select('*')
@@ -27,7 +24,11 @@ export default function StoresPage() {
       setStores(data || [])
     }
     setLoading(false)
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchStores()
+  }, [fetchStores])
 
   async function addStore(e: React.FormEvent) {
     e.preventDefault()

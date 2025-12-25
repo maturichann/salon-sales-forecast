@@ -1,6 +1,7 @@
 'use client'
+/* eslint-disable react-hooks/set-state-in-effect */
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Store, ForecastHistory } from '@/types/database'
 import { formatCurrency, getSeasonLabel } from '@/lib/constants'
@@ -14,21 +15,13 @@ export default function HistoryPage() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [selectedStore, setSelectedStore] = useState<string>('')
 
-  useEffect(() => {
-    fetchStores()
-  }, [])
-
-  useEffect(() => {
-    fetchHistory()
-  }, [selectedYear, selectedStore])
-
-  async function fetchStores() {
+  const fetchStores = useCallback(async () => {
     const { data } = await supabase.from('stores').select('*').order('created_at')
     setStores(data || [])
     setLoading(false)
-  }
+  }, [])
 
-  async function fetchHistory() {
+  const fetchHistory = useCallback(async () => {
     let query = supabase
       .from('forecast_history')
       .select('*, stores(name)')
@@ -42,13 +35,15 @@ export default function HistoryPage() {
 
     const { data } = await query
     setHistory((data as HistoryWithStore[]) || [])
-  }
+  }, [selectedStore, selectedYear])
 
-  async function deleteHistory(id: string) {
-    if (!confirm('この予測履歴を削除しますか？')) return
-    await supabase.from('forecast_history').delete().eq('id', id)
+  useEffect(() => {
+    fetchStores()
+  }, [fetchStores])
+
+  useEffect(() => {
     fetchHistory()
-  }
+  }, [fetchHistory])
 
   // 月ごとにグループ化
   const groupedByMonth = history.reduce((acc, h) => {
