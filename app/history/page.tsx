@@ -11,7 +11,7 @@ export default function HistoryPage() {
   const [stores, setStores] = useState<Store[]>([])
   const [history, setHistory] = useState<HistoryWithStore[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+  const [selectedYear, setSelectedYear] = useState(2026)
   const [selectedStore, setSelectedStore] = useState<string>('')
 
   useEffect(() => {
@@ -84,7 +84,7 @@ export default function HistoryPage() {
             className="px-2 sm:px-3 py-2 border border-gray-300 rounded-md text-sm"
           >
             {[...Array(3)].map((_, i) => {
-              const year = new Date().getFullYear() - 1 + i
+              const year = 2026 + i
               return (
                 <option key={year} value={year}>
                   {year}年
