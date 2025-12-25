@@ -1,6 +1,7 @@
 'use client'
+/* eslint-disable react-hooks/set-state-in-effect */
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Store, Staff, HelpRecord } from '@/types/database'
 import { getSeasonLabel } from '@/lib/constants'
@@ -18,25 +19,16 @@ export default function HelpListPage() {
   const [loading, setLoading] = useState(true)
 
   const [selectedYear, setSelectedYear] = useState(() => {
-    const nextMonth = new Date().getMonth() + 2
-    return nextMonth > 12 ? 2026 : 2026
+    const now = new Date()
+    const nextMonth = now.getMonth() + 2
+    return nextMonth > 12 ? now.getFullYear() + 1 : now.getFullYear()
   })
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const nextMonth = new Date().getMonth() + 2
     return nextMonth > 12 ? nextMonth - 12 : nextMonth
   })
 
-  useEffect(() => {
-    fetchMasterData()
-  }, [])
-
-  useEffect(() => {
-    if (stores.length && staff.length) {
-      fetchHelpData()
-    }
-  }, [selectedYear, selectedMonth, stores, staff])
-
-  async function fetchMasterData() {
+  const fetchMasterData = useCallback(async () => {
     const [storesRes, staffRes] = await Promise.all([
       supabase.from('stores').select('*').order('created_at'),
       supabase.from('staff').select('*').order('name'),
@@ -45,9 +37,9 @@ export default function HelpListPage() {
     setStores(storesRes.data || [])
     setStaff(staffRes.data || [])
     setLoading(false)
-  }
+  }, [])
 
-  async function fetchHelpData() {
+  const fetchHelpData = useCallback(async () => {
     const { data } = await supabase
       .from('help_records')
       .select('*')
@@ -72,7 +64,17 @@ export default function HelpListPage() {
     } else {
       setHelpList([])
     }
-  }
+  }, [selectedMonth, selectedYear, staff, stores])
+
+  useEffect(() => {
+    fetchMasterData()
+  }, [fetchMasterData])
+
+  useEffect(() => {
+    if (stores.length && staff.length) {
+      fetchHelpData()
+    }
+  }, [fetchHelpData, fetchMasterData, staff.length, stores.length])
 
   if (loading) {
     return <div className="text-center py-8">読み込み中...</div>
@@ -91,7 +93,7 @@ export default function HelpListPage() {
               className="px-2 sm:px-3 py-2 border border-gray-300 rounded-md text-sm"
             >
               {[...Array(3)].map((_, i) => {
-                const year = 2026 + i
+                const year = new Date().getFullYear() + i
                 return (
                   <option key={year} value={year}>
                     {year}年

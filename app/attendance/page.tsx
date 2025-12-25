@@ -1,9 +1,10 @@
 'use client'
+/* eslint-disable react-hooks/set-state-in-effect */
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Store, Staff, HelpRecord } from '@/types/database'
-import { JOB_TYPES, getSeasonLabel } from '@/lib/constants'
+import { getSeasonLabel } from '@/lib/constants'
 
 type StaffWithStore = Staff & { stores: { name: string } }
 
@@ -13,8 +14,15 @@ export default function HelpPage() {
   const [helpRecords, setHelpRecords] = useState<HelpRecord[]>([])
   const [loading, setLoading] = useState(true)
 
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 2 > 12 ? 1 : new Date().getMonth() + 2)
+  const [selectedYear, setSelectedYear] = useState(() => {
+    const now = new Date()
+    const nextMonth = now.getMonth() + 2
+    return nextMonth > 12 ? now.getFullYear() + 1 : now.getFullYear()
+  })
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const nextMonth = new Date().getMonth() + 2
+    return nextMonth > 12 ? 1 : nextMonth
+  })
   const [selectedStore, setSelectedStore] = useState<string>('')
 
   const [showHelpModal, setShowHelpModal] = useState(false)
@@ -26,17 +34,7 @@ export default function HelpPage() {
   })
   const [editingHelpId, setEditingHelpId] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  useEffect(() => {
-    if (selectedStore && staff.length > 0) {
-      fetchHelpData()
-    }
-  }, [selectedYear, selectedMonth, selectedStore, staff])
-
-  async function fetchData() {
+  const fetchData = useCallback(async () => {
     const [storesRes, staffRes] = await Promise.all([
       supabase.from('stores').select('*').order('created_at'),
       supabase.from('staff').select('*, stores(name)').order('name'),
@@ -53,9 +51,9 @@ export default function HelpPage() {
       setSelectedStore(storesData[0].id)
     }
     setLoading(false)
-  }
+  }, [])
 
-  async function fetchHelpData() {
+  const fetchHelpData = useCallback(async () => {
     const storeStaff = staff.filter((s) => s.store_id === selectedStore)
     const staffIds = storeStaff.map((s) => s.id)
 
@@ -72,7 +70,17 @@ export default function HelpPage() {
       .in('staff_id', staffIds)
 
     setHelpRecords(data || [])
-  }
+  }, [selectedMonth, selectedStore, selectedYear, staff])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  useEffect(() => {
+    if (selectedStore && staff.length > 0) {
+      fetchHelpData()
+    }
+  }, [fetchHelpData, selectedStore, staff.length])
 
   function openHelpModal(staffId?: string, helpRecord?: HelpRecord) {
     if (helpRecord) {
@@ -216,7 +224,7 @@ export default function HelpPage() {
                       </td>
                       <td className="px-2 sm:px-4 py-2 sm:py-3">
                         <div className="flex flex-col gap-1">
-                          {helps.map((h, index) => {
+                          {helps.map((h) => {
                             const toStore = stores.find((st) => st.id === h.to_store_id)
                             return (
                               <div
