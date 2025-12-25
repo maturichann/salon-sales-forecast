@@ -8,21 +8,23 @@ import { getSeasonLabel } from '@/lib/constants'
 
 type StaffWithStore = Staff & { stores: { name: string } }
 
+function getNextYearMonth() {
+  const now = new Date()
+  const nextMonth = now.getMonth() + 2
+  return {
+    year: nextMonth > 12 ? now.getFullYear() + 1 : now.getFullYear(),
+    month: nextMonth > 12 ? nextMonth - 12 : nextMonth,
+  }
+}
+
 export default function HelpPage() {
   const [stores, setStores] = useState<Store[]>([])
   const [staff, setStaff] = useState<StaffWithStore[]>([])
   const [helpRecords, setHelpRecords] = useState<HelpRecord[]>([])
   const [loading, setLoading] = useState(true)
 
-  const [selectedYear, setSelectedYear] = useState(() => {
-    const now = new Date()
-    const nextMonth = now.getMonth() + 2
-    return nextMonth > 12 ? now.getFullYear() + 1 : now.getFullYear()
-  })
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const nextMonth = new Date().getMonth() + 2
-    return nextMonth > 12 ? 1 : nextMonth
-  })
+  const [selectedYear, setSelectedYear] = useState(() => getNextYearMonth().year)
+  const [selectedMonth, setSelectedMonth] = useState(() => getNextYearMonth().month)
   const [selectedStore, setSelectedStore] = useState<string>('')
 
   const [showHelpModal, setShowHelpModal] = useState(false)

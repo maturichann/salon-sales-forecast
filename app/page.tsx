@@ -7,6 +7,15 @@ import { Store, Staff, SalesStandard, HelpRecord, StaffLeave } from '@/types/dat
 import { calculateForecast, StoreForecast } from '@/lib/forecast'
 import { formatCurrency, getSeasonLabel } from '@/lib/constants'
 
+function getNextYearMonth() {
+  const now = new Date()
+  const nextMonth = now.getMonth() + 2
+  return {
+    year: nextMonth > 12 ? now.getFullYear() + 1 : now.getFullYear(),
+    month: nextMonth > 12 ? nextMonth - 12 : nextMonth,
+  }
+}
+
 export default function HomePage() {
   const [stores, setStores] = useState<Store[]>([])
   const [staff, setStaff] = useState<Staff[]>([])
@@ -16,15 +25,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [forecasts, setForecasts] = useState<StoreForecast[]>([])
 
-  const [selectedYear, setSelectedYear] = useState(() => {
-    const now = new Date()
-    const nextMonth = now.getMonth() + 2
-    return nextMonth > 12 ? now.getFullYear() + 1 : now.getFullYear()
-  })
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const nextMonth = new Date().getMonth() + 2
-    return nextMonth > 12 ? nextMonth - 12 : nextMonth
-  })
+  const [selectedYear, setSelectedYear] = useState(() => getNextYearMonth().year)
+  const [selectedMonth, setSelectedMonth] = useState(() => getNextYearMonth().month)
   const [expandedStores, setExpandedStores] = useState<Set<string>>(new Set())
   const [isFukubukuroYear, setIsFukubukuroYear] = useState(false)
 

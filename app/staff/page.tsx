@@ -8,6 +8,15 @@ import { JOB_TYPES, STAFF_RANKS, getSeasonLabel } from '@/lib/constants'
 
 type StaffWithStore = Staff & { stores: { name: string } }
 
+function getNextYearMonth() {
+  const now = new Date()
+  const nextMonth = now.getMonth() + 2
+  return {
+    year: nextMonth > 12 ? now.getFullYear() + 1 : now.getFullYear(),
+    month: nextMonth > 12 ? nextMonth - 12 : nextMonth,
+  }
+}
+
 export default function StaffPage() {
   const [staff, setStaff] = useState<StaffWithStore[]>([])
   const [stores, setStores] = useState<Store[]>([])
@@ -18,15 +27,8 @@ export default function StaffPage() {
   const [filterStore, setFilterStore] = useState<string>('')
   const [filterJobType, setFilterJobType] = useState<string>('')
 
-  const [selectedYear, setSelectedYear] = useState(() => {
-    const now = new Date()
-    const nextMonth = now.getMonth() + 2
-    return nextMonth > 12 ? now.getFullYear() + 1 : now.getFullYear()
-  })
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const nextMonth = new Date().getMonth() + 2
-    return nextMonth > 12 ? 1 : nextMonth
-  })
+  const [selectedYear, setSelectedYear] = useState(() => getNextYearMonth().year)
+  const [selectedMonth, setSelectedMonth] = useState(() => getNextYearMonth().month)
 
   const [formData, setFormData] = useState({
     name: '',

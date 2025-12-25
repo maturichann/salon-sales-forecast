@@ -8,11 +8,20 @@ import { formatCurrency, getSeasonLabel } from '@/lib/constants'
 
 type HistoryWithStore = ForecastHistory & { stores: { name: string } }
 
+function getNextYearMonth() {
+  const now = new Date()
+  const nextMonth = now.getMonth() + 2
+  return {
+    year: nextMonth > 12 ? now.getFullYear() + 1 : now.getFullYear(),
+    month: nextMonth > 12 ? nextMonth - 12 : nextMonth,
+  }
+}
+
 export default function HistoryPage() {
   const [stores, setStores] = useState<Store[]>([])
   const [history, setHistory] = useState<HistoryWithStore[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+  const [selectedYear, setSelectedYear] = useState(() => getNextYearMonth().year)
   const [selectedStore, setSelectedStore] = useState<string>('')
 
   const fetchStores = useCallback(async () => {
@@ -79,7 +88,8 @@ export default function HistoryPage() {
             className="px-2 sm:px-3 py-2 border border-gray-300 rounded-md text-sm"
           >
             {[...Array(3)].map((_, i) => {
-              const year = new Date().getFullYear() - 1 + i
+              const baseYear = getNextYearMonth().year
+              const year = baseYear - 1 + i
               return (
                 <option key={year} value={year}>
                   {year}年

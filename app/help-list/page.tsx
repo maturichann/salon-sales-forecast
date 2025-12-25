@@ -12,21 +12,23 @@ type HelpWithDetails = HelpRecord & {
   toStoreName: string
 }
 
+function getNextYearMonth() {
+  const now = new Date()
+  const nextMonth = now.getMonth() + 2
+  return {
+    year: nextMonth > 12 ? now.getFullYear() + 1 : now.getFullYear(),
+    month: nextMonth > 12 ? nextMonth - 12 : nextMonth,
+  }
+}
+
 export default function HelpListPage() {
   const [stores, setStores] = useState<Store[]>([])
   const [staff, setStaff] = useState<Staff[]>([])
   const [helpList, setHelpList] = useState<HelpWithDetails[]>([])
   const [loading, setLoading] = useState(true)
 
-  const [selectedYear, setSelectedYear] = useState(() => {
-    const now = new Date()
-    const nextMonth = now.getMonth() + 2
-    return nextMonth > 12 ? now.getFullYear() + 1 : now.getFullYear()
-  })
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const nextMonth = new Date().getMonth() + 2
-    return nextMonth > 12 ? nextMonth - 12 : nextMonth
-  })
+  const [selectedYear, setSelectedYear] = useState(() => getNextYearMonth().year)
+  const [selectedMonth, setSelectedMonth] = useState(() => getNextYearMonth().month)
 
   const fetchMasterData = useCallback(async () => {
     const [storesRes, staffRes] = await Promise.all([
