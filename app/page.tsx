@@ -15,10 +15,14 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [forecasts, setForecasts] = useState<StoreForecast[]>([])
 
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
-  const [selectedMonth, setSelectedMonth] = useState(
-    new Date().getMonth() + 2 > 12 ? 1 : new Date().getMonth() + 2
-  )
+  const [selectedYear, setSelectedYear] = useState(() => {
+    const nextMonth = new Date().getMonth() + 2
+    return nextMonth > 12 ? 2026 : 2026
+  })
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const nextMonth = new Date().getMonth() + 2
+    return nextMonth > 12 ? nextMonth - 12 : nextMonth
+  })
   const [expandedStores, setExpandedStores] = useState<Set<string>>(new Set())
   const [isFukubukuroYear, setIsFukubukuroYear] = useState(false)
 
@@ -129,7 +133,7 @@ export default function HomePage() {
               className="px-3 py-2 border border-gray-300 rounded-md text-sm"
             >
               {[...Array(3)].map((_, i) => {
-                const year = new Date().getFullYear() + i
+                const year = 2026 + i
                 return (
                   <option key={year} value={year}>
                     {year}年
