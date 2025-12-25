@@ -200,7 +200,14 @@ export default function HomePage() {
               {/* モバイル: 縦並び */}
               <div className="sm:hidden">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">{forecast.storeName}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">{forecast.storeName}</span>
+                    {forecast.helpReceived.total > 0 && (
+                      <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">
+                        +{formatCurrency(forecast.helpReceived.total)}
+                      </span>
+                    )}
+                  </div>
                   <span className="text-gray-400">
                     {expandedStores.has(forecast.storeId) ? '▲' : '▼'}
                   </span>
