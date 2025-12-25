@@ -8,7 +8,8 @@ const navItems = [
   { href: '/', label: '売上予測', shortLabel: '予測' },
   { href: '/stores', label: '店舗管理', shortLabel: '店舗' },
   { href: '/staff', label: 'スタッフ管理', shortLabel: 'スタッフ' },
-  { href: '/attendance', label: 'ヘルプ入力', shortLabel: 'ヘルプ' },
+  { href: '/attendance', label: 'ヘルプ入力', shortLabel: '入力' },
+  { href: '/help-list', label: 'ヘルプ一覧', shortLabel: '一覧' },
   { href: '/history', label: '予測履歴', shortLabel: '履歴' },
   { href: '/guide', label: '使い方', shortLabel: '使い方' },
 ]
